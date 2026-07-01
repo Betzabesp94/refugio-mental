@@ -1,4 +1,4 @@
-# Refugio Mental 🫶
+# Refugio Mental
 
 **Directorio comunitario gratuito de apoyo psicológico — Venezuela 24J**
 
@@ -8,35 +8,48 @@ Refugio Mental conecta psicólogos voluntarios con personas afectadas emocionalm
 
 ---
 
-## ¿Cómo ejecutarlo localmente?
-
-### Requisitos
-
-- Node.js v20 o superior
-- npm v9 o superior
-
-### Instalación
+## Inicio rápido
 
 ```bash
-# Clona el repositorio
 git clone https://github.com/tu-usuario/refugio-mental.git
 cd refugio-mental
-
-# Instala las dependencias
 npm install
-
-# Inicia el servidor de desarrollo
+cp .example.env .env.local   # agrega tu NEXT_PUBLIC_API_URL
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+Abre [http://localhost:3000](http://localhost:3000).
 
-### Producción
+> Necesitas desplegar primero el backend en AWS para que el directorio funcione. Ver → [docs/deployment.md](docs/deployment.md)
+
+---
+
+## Arquitectura
+
+El frontend corre en **Vercel** (Next.js) y consume una API serverless en **AWS**. Los perfiles de psicólogos se persisten en **DynamoDB** a través de **Lambda + API Gateway**.
+
+```
+Usuario → Next.js (Vercel) → API Gateway → Lambda → DynamoDB
+```
+
+Ver documentación completa → [docs/architecture.md](docs/architecture.md)
+
+---
+
+## Deploy en AWS
+
+El backend se despliega con un solo comando usando **AWS CDK**:
 
 ```bash
-npm run build
-npm run start
+cd backend
+npm install
+cdk bootstrap   # solo la primera vez
+cdk deploy
 ```
+
+El output incluye la `ApiUrl` que debes configurar como `NEXT_PUBLIC_API_URL` en Vercel.
+
+Ver guía detallada → [docs/deployment.md](docs/deployment.md)
 
 ---
 
@@ -44,43 +57,23 @@ npm run start
 
 ```
 refugio-mental/
-├── app/                        # App Router de Next.js
-│   ├── layout.tsx              # Layout raíz con Navbar, Footer y providers
-│   ├── page.tsx                # Home page
-│   ├── providers.tsx           # ThemeProvider + Toaster
-│   ├── directorio/
-│   │   └── page.tsx            # Directorio de psicólogos
-│   ├── psicologos/
-│   │   ├── page.tsx            # Info para psicólogos voluntarios
-│   │   ├── registrar/
-│   │   │   └── page.tsx        # Formulario de registro
-│   │   └── guia/
-│   │       └── page.tsx        # Guía de Calendly
-│   └── pacientes/
-│       └── page.tsx            # Info y guía para pacientes
-├── components/
-│   ├── ui/                     # Componentes base (Button, Card, Input…)
-│   └── shared/                 # Componentes compartidos (Navbar, Footer…)
-├── features/
-│   ├── directory/              # Lógica y UI del directorio
-│   │   ├── DirectoryGrid.tsx
-│   │   ├── ProfileCard.tsx
-│   │   ├── SearchBar.tsx
-│   │   └── FilterPanel.tsx
-│   ├── home/
-│   │   └── Hero.tsx
-│   └── registration/
-│       └── ProfileForm.tsx     # Formulario completo de registro
-├── hooks/
-│   ├── useLocalStorage.ts      # Hook genérico de LocalStorage
-│   └── usePerfiles.ts          # Hook de perfiles (leer, filtrar, guardar)
+├── app/                    # Next.js App Router (rutas y layouts)
+├── components/             # Componentes UI reutilizables
+├── features/               # Lógica y UI por feature (directory, registration)
+├── hooks/                  # usePerfiles, useFiltrarPerfiles
 ├── lib/
-│   ├── utils.ts                # cn(), generarId(), formatearFecha()
-│   └── storage.ts              # Capa de datos (fácil de reemplazar por API)
-├── types/
-│   └── index.ts                # Tipos TypeScript del dominio
-└── data/
-    └── seed.ts                 # Perfiles ficticios de ejemplo
+│   ├── api.ts              # Capa de datos → API Gateway
+│   └── utils.ts            # Utilidades generales
+├── types/                  # Tipos TypeScript del dominio
+├── backend/                # CDK + Lambda + scripts de AWS
+│   ├── bin/                # Entry point CDK
+│   ├── lib/                # Stacks y Constructs
+│   ├── lambda/             # Handlers Lambda (CRUD psicólogos)
+│   ├── shared/             # Tipos compartidos frontend/backend
+│   └── scripts/            # seed.ts para poblar DynamoDB
+└── docs/                   # Documentación técnica detallada
+    ├── architecture.md
+    └── deployment.md
 ```
 
 ---
@@ -91,66 +84,29 @@ refugio-mental/
 |------|------------|
 | Framework | Next.js 16.2 (App Router) |
 | Lenguaje | TypeScript 5 |
-| UI | React 19 |
-| Estilos | Tailwind CSS 4 |
-| Animaciones | tailwindcss-animate |
-| Componentes | Radix UI |
-| Variantes | class-variance-authority + clsx + tailwind-merge |
+| UI | React 19 + Radix UI |
+| Estilos | Tailwind CSS 4 + tailwindcss-animate |
 | Iconos | Lucide React |
 | Toasts | Sonner |
 | Tema | next-themes (claro/oscuro) |
-| Persistencia | LocalStorage (client-side) |
+| Hosting frontend | Vercel |
+| API | AWS API Gateway HTTP API |
+| Compute | AWS Lambda (Node.js 22, ARM64) |
+| Base de datos | Amazon DynamoDB (PAY_PER_REQUEST) |
+| Infraestructura | AWS CDK (TypeScript) |
 
 ---
 
-## Flujo de la aplicación
+## Mejoras futuras
 
-1. **Home** — Presentación del proyecto con llamadas a la acción.
-2. **Directorio** — Tarjetas de psicólogos con búsqueda y filtros por especialidad, idioma, modalidad y país.
-3. **Registro** — Formulario para que psicólogos publiquen su perfil (guardado en LocalStorage).
-4. **Guía Calendly** — Tutorial paso a paso para configurar el enlace de agendamiento.
-5. **Para pacientes** — Información sobre cómo elegir psicólogo, qué esperar y números de emergencia.
-
----
-
-## Limitaciones del MVP
-
-- **Sin backend**: Los datos se guardan exclusivamente en LocalStorage del navegador. Si el usuario borra datos del navegador, los perfiles registrados por usuarios desaparecen (los ficticios de seed permanecen).
-- **Sin moderación**: Cualquier persona puede registrarse. No hay verificación de credenciales.
-- **Sin autenticación**: No hay sistema de inicio de sesión.
-- **Sin persistencia compartida**: Los perfiles registrados solo son visibles en el dispositivo y navegador donde se registraron.
-- **Sin notificaciones**: No hay sistema de correos ni confirmaciones desde la plataforma.
-
----
-
-## Arquitectura de datos
-
-La capa de datos está intencionalmente desacoplada del resto de la aplicación. Todo el acceso a datos pasa por `lib/storage.ts`, que expone tres funciones:
-
-```typescript
-obtenerPerfiles(): Psicologo[]   // GET /api/psicologos (futuro)
-guardarPerfil(p: Psicologo): void // POST /api/psicologos (futuro)
-limpiarPerfilesUsuario(): void    // solo para desarrollo
-```
-
-Para migrar a un backend real, basta con reemplazar el cuerpo de estas funciones por llamadas `fetch()`.
-
----
-
-## Posibles mejoras futuras
-
-- [ ] **Backend + base de datos** (PostgreSQL + API REST o GraphQL)
-- [ ] **Moderación de perfiles** antes de publicación
-- [ ] **Verificación de credenciales** profesionales
-- [ ] **Autenticación** para psicólogos con gestión de su propio perfil
-- [ ] **Búsqueda geográfica** por proximidad
-- [ ] **Videollamadas integradas** (sin necesidad de Calendly externo)
-- [ ] **Sistema de reseñas** anónimas
-- [ ] **Panel administrativo** para gestión de perfiles
-- [ ] **Internacionalización** (i18n) para comunidades no hispanohablantes
-- [ ] **Notificaciones push** o por correo
-- [ ] **Accesibilidad mejorada** con revisión WCAG 2.1 AA completa
-- [ ] **PWA** para uso offline
+- [ ] Moderación de perfiles antes de publicación
+- [ ] Verificación de credenciales profesionales
+- [ ] Autenticación con Cognito para panel de psicólogos
+- [ ] Subida de fotografías a S3
+- [ ] Panel administrativo
+- [ ] Búsqueda geográfica
+- [ ] Rate limiting en API Gateway
+- [ ] Internacionalización (i18n)
 
 ---
 
