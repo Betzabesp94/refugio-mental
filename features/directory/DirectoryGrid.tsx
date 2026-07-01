@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserSearch, UserPlus } from "lucide-react";
+import { UserSearch, UserPlus, AlertCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { ProfileCard } from "./ProfileCard";
 import { SearchBar } from "./SearchBar";
@@ -45,7 +45,7 @@ function SkeletonCard() {
 }
 
 export function DirectoryGrid() {
-  const { perfiles, cargando } = usePerfiles();
+  const { perfiles, cargando, error, recargar } = usePerfiles();
   const [filtros, setFiltros] = useState<FiltrosDirectorio>(filtrosIniciales);
 
   const actualizarFiltros = (parcial: Partial<FiltrosDirectorio>) => {
@@ -53,6 +53,22 @@ export function DirectoryGrid() {
   };
 
   const perfilesFiltrados = useFiltrarPerfiles(perfiles, filtros);
+
+  if (error) {
+    return (
+      <EmptyState
+        icon={AlertCircle}
+        title="No se pudo cargar el directorio"
+        description={error}
+        action={
+          <Button variant="outline" onClick={recargar} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Intentar nuevamente
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

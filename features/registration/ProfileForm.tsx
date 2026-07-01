@@ -18,8 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { guardarPerfil } from "@/lib/storage";
-import { generarId } from "@/lib/utils";
+import { guardarPerfil } from "@/lib/api";
 import type { Modalidad, Psicologo } from "@/types";
 
 const ESPECIALIDADES = [
@@ -209,11 +208,7 @@ export function ProfileForm() {
 
     setEnviando(true);
 
-    // Simular pequeña latencia
-    await new Promise((r) => setTimeout(r, 800));
-
-    const psicologo: Psicologo = {
-      id: generarId(),
+    const datos: Omit<Psicologo, "id" | "creadoEn"> = {
       nombre: form.nombre.trim(),
       apellido: form.apellido.trim(),
       fotografia: form.fotografia.trim() || "",
@@ -229,15 +224,16 @@ export function ProfileForm() {
         (r) => r.plataforma && r.url
       ),
       aceptaDirectorio: true,
-      creadoEn: new Date().toISOString(),
     };
 
     try {
-      guardarPerfil(psicologo);
+      await guardarPerfil(datos);
       toast.success("¡Perfil registrado con éxito! Ya apareces en el directorio.");
       router.push("/directorio");
-    } catch {
-      toast.error("Hubo un error al guardar tu perfil. Inténtalo de nuevo.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Hubo un error al guardar tu perfil.";
+      toast.error(message);
       setEnviando(false);
     }
   };

@@ -2,19 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Psicologo, FiltrosDirectorio } from "@/types";
-import { obtenerPerfiles, guardarPerfil } from "@/lib/storage";
+import { obtenerPerfiles, guardarPerfil } from "@/lib/api";
 
 export function usePerfiles() {
   const [perfiles, setPerfiles] = useState<Psicologo[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(() => {
+  const cargar = useCallback(async () => {
     setCargando(true);
-    // Simular latencia mínima para mostrar skeleton
-    setTimeout(() => {
-      setPerfiles(obtenerPerfiles());
+    setError(null);
+    try {
+      const data = await obtenerPerfiles();
+      setPerfiles(data);
+    } catch (err) {
+      console.error("Error al cargar perfiles:", err);
+      setError(
+        "No se pudieron cargar los perfiles. Verifica tu conexión e intenta nuevamente."
+      );
+      setPerfiles([]);
+    } finally {
       setCargando(false);
-    }, 600);
+    }
   }, []);
 
   useEffect(() => {
@@ -22,14 +31,15 @@ export function usePerfiles() {
   }, [cargar]);
 
   const agregar = useCallback(
-    (psicologo: Psicologo) => {
-      guardarPerfil(psicologo);
-      cargar();
+    async (datos: Omit<Psicologo, "id" | "creadoEn">): Promise<Psicologo> => {
+      const nuevo = await guardarPerfil(datos);
+      await cargar();
+      return nuevo;
     },
     [cargar]
   );
 
-  return { perfiles, cargando, agregar, recargar: cargar };
+  return { perfiles, cargando, error, agregar, recargar: cargar };
 }
 
 export function useFiltrarPerfiles(
