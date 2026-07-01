@@ -33,7 +33,7 @@ export class LambdaConstruct extends Construct {
     const lambdaDir = path.join(__dirname, '../../lambda/psicologos');
 
     const createFn = (name: string, entry: string): NodejsFunction => {
-      return new NodejsFunction(scope, name, {
+      return new NodejsFunction(this, name, {
         entry: path.join(lambdaDir, entry),
         handler: 'handler',
         runtime: lambda.Runtime.NODEJS_22_X,

@@ -58,18 +58,10 @@ export class ApiConstruct extends Construct {
       integration: new HttpLambdaIntegration('GetIntegration', handlers.get),
     });
 
-    // PUT /v1/psicologos/{id} — update profile (reserved for admin panel)
-    this.httpApi.addRoutes({
-      path: '/v1/psicologos/{id}',
-      methods: [apigwv2.HttpMethod.PUT],
-      integration: new HttpLambdaIntegration('UpdateIntegration', handlers.update),
-    });
+    // TODO: Add PUT /v1/psicologos/{id} once a JWT/IAM authorizer is implemented.
+    //       Do not expose admin endpoints publicly.
 
-    // DELETE /v1/psicologos/{id} — remove profile (reserved for admin panel)
-    this.httpApi.addRoutes({
-      path: '/v1/psicologos/{id}',
-      methods: [apigwv2.HttpMethod.DELETE],
-      integration: new HttpLambdaIntegration('DeleteIntegration', handlers.remove),
-    });
+    // TODO: Add DELETE /v1/psicologos/{id} once a JWT/IAM authorizer is implemented.
+    //       Do not expose admin endpoints publicly.
   }
 }

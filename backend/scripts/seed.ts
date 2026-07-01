@@ -10,8 +10,8 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
+  GetCommand,
   PutCommand,
-  ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { Psicologo } from "../shared/types/psicologo";
 
@@ -48,18 +48,15 @@ async function seed(): Promise<void> {
     `\nSeeding ${psicologosSeed.length} profiles into: ${TABLE_NAME} (${REGION})\n`,
   );
 
-  const existing = await docClient.send(
-    new ScanCommand({ TableName: TABLE_NAME, ProjectionExpression: "id" }),
-  );
-  const existingIds = new Set(
-    (existing.Items ?? []).map((i) => i.id as string),
-  );
-
   let inserted = 0;
   let skipped = 0;
 
   for (const psicologo of psicologosSeed) {
-    if (existingIds.has(psicologo.id)) {
+    const existing = await docClient.send(
+      new GetCommand({ TableName: TABLE_NAME, Key: { id: psicologo.id } }),
+    );
+
+    if (existing.Item) {
       console.log(`  skip  ${psicologo.id} — already exists`);
       skipped++;
       continue;
