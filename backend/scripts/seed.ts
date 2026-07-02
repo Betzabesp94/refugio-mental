@@ -1,11 +1,19 @@
 /**
  * Seed script: populates DynamoDB with the initial set of fictional psychologist profiles.
  *
- * Run once after the first cdk deploy:
- *   TABLE_NAME=refugio-mental-psicologos AWS_REGION=us-east-1 npm run seed
+ * Run once after the first cdk deploy (from the backend/ folder):
+ *   npm run seed
+ *
+ * Reads TABLE_NAME from the root .env.local. Override inline if needed:
+ *   TABLE_NAME=refugio-mental-psicologos npm run seed
  *
  * Profiles already present (by id) are skipped — safe to run multiple times.
  */
+
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {

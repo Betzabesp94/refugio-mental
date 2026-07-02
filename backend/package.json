@@ -10,13 +10,16 @@
     "deploy": "cdk deploy --require-approval never",
     "destroy": "cdk destroy",
     "diff": "cdk diff",
-    "seed": "ts-node -r tsconfig-paths/register scripts/seed.ts"
+    "seed": "ts-node -r tsconfig-paths/register scripts/seed.ts",
+    "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.758.0",
     "@aws-sdk/client-dynamodb": "^3.758.0",
     "@aws-sdk/lib-dynamodb": "^3.758.0",
     "aws-cdk-lib": "^2.260.0",
-    "constructs": "^10.4.2"
+    "constructs": "^10.4.2",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.149",

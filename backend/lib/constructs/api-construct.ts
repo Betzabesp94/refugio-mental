@@ -1,11 +1,15 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Construct } from 'constructs';
 import { LambdaHandlers } from './lambda-construct';
 
 interface ApiConstructProps {
   handlers: LambdaHandlers;
+  userPool: cognito.UserPool;
+  userPoolClient: cognito.UserPoolClient;
 }
 
 export class ApiConstruct extends Construct {
@@ -14,7 +18,7 @@ export class ApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
 
-    const { handlers } = props;
+    const { handlers, userPool, userPoolClient } = props;
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: 'refugio-mental-api',
@@ -37,6 +41,17 @@ export class ApiConstruct extends Construct {
       },
     });
 
+    // JWT Authorizer backed by Cognito User Pool — used for admin-only routes
+    const adminAuthorizer = new HttpJwtAuthorizer(
+      'AdminAuthorizer',
+      userPool.userPoolProviderUrl,
+      {
+        jwtAudience: [userPoolClient.userPoolClientId],
+      }
+    );
+
+    // --- Public routes (no auth required) ---
+
     // GET /v1/psicologos — list profiles with optional filters
     this.httpApi.addRoutes({
       path: '/v1/psicologos',
@@ -58,10 +73,22 @@ export class ApiConstruct extends Construct {
       integration: new HttpLambdaIntegration('GetIntegration', handlers.get),
     });
 
-    // TODO: Add PUT /v1/psicologos/{id} once a JWT/IAM authorizer is implemented.
-    //       Do not expose admin endpoints publicly.
+    // --- Admin routes (JWT required) ---
 
-    // TODO: Add DELETE /v1/psicologos/{id} once a JWT/IAM authorizer is implemented.
-    //       Do not expose admin endpoints publicly.
+    // DELETE /v1/psicologos/{id} — remove profile (admin only)
+    this.httpApi.addRoutes({
+      path: '/v1/psicologos/{id}',
+      methods: [apigwv2.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration('DeleteIntegration', handlers.remove),
+      authorizer: adminAuthorizer,
+    });
+
+    // PUT /v1/psicologos/{id} — update profile (admin only)
+    this.httpApi.addRoutes({
+      path: '/v1/psicologos/{id}',
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: new HttpLambdaIntegration('UpdateIntegration', handlers.update),
+      authorizer: adminAuthorizer,
+    });
   }
 }
