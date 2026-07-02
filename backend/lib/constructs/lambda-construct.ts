@@ -15,6 +15,7 @@ export interface LambdaHandlers {
   create: NodejsFunction;
   update: NodejsFunction;
   remove: NodejsFunction;
+  verify: NodejsFunction;
 }
 
 export class LambdaConstruct extends Construct {
@@ -57,6 +58,7 @@ export class LambdaConstruct extends Construct {
       create: createFn('CreatePsicologo', 'create.ts'),
       update: createFn('UpdatePsicologo', 'update.ts'),
       remove: createFn('DeletePsicologo', 'delete.ts'),
+      verify: createFn('VerifyPsicologo', 'verify.ts'),
     };
 
     // Minimal IAM permissions per function
@@ -65,5 +67,6 @@ export class LambdaConstruct extends Construct {
     table.grantWriteData(this.handlers.create);
     table.grantReadWriteData(this.handlers.update);
     table.grantReadWriteData(this.handlers.remove);
+    table.grantWriteData(this.handlers.verify);
   }
 }

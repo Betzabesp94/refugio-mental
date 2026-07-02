@@ -63,6 +63,7 @@ interface FormState {
   apellido: string;
   fotografia: string;
   especialidad: string;
+  credencialUrl: string; // <-- Nuevo campo añadido
   ciudad: string;
   pais: string;
   idiomas: string[];
@@ -79,6 +80,7 @@ const estadoInicial: FormState = {
   apellido: "",
   fotografia: "",
   especialidad: "",
+  credencialUrl: "", // <-- Inicializado
   ciudad: "",
   pais: "",
   idiomas: [],
@@ -172,6 +174,10 @@ export function ProfileForm() {
       nuevosErrores.apellido = "El apellido es obligatorio.";
     if (!form.especialidad)
       nuevosErrores.especialidad = "Selecciona una especialidad.";
+    if (!form.credencialUrl.trim())
+      nuevosErrores.credencialUrl = "El enlace a tu credencial es obligatorio.";
+    else if (!form.credencialUrl.startsWith("http"))
+      nuevosErrores.credencialUrl = "Introduce una URL válida (https://).";
     if (!form.ciudad.trim())
       nuevosErrores.ciudad = "La ciudad es obligatoria.";
     if (!form.pais) nuevosErrores.pais = "El país es obligatorio.";
@@ -213,6 +219,9 @@ export function ProfileForm() {
       apellido: form.apellido.trim(),
       fotografia: form.fotografia.trim() || "",
       especialidad: form.especialidad,
+      credencialUrl: form.credencialUrl.trim(), // <-- Añadido al payload
+      // El estado inicial por defecto para un nuevo registro
+      estadoVerificacion: 'PENDING',
       ciudad: form.ciudad.trim(),
       pais: form.pais,
       idiomas: form.idiomas,
@@ -228,7 +237,7 @@ export function ProfileForm() {
 
     try {
       await guardarPerfil(datos);
-      toast.success("¡Perfil registrado con éxito! Ya apareces en el directorio.");
+      toast.success("¡Perfil registrado! Pendiente de verificación.");
       router.push("/directorio");
     } catch (err) {
       const message =
@@ -374,6 +383,26 @@ export function ProfileForm() {
             </SelectContent>
           </Select>
         </FormField>
+
+        {/* --- CAMPO DE CREDENCIAL AÑADIDO AQUÍ --- */}
+        <FormField
+          label="Credencial Profesional (URL)"
+          htmlFor={`${uid}-credencial`}
+          required
+          hint="Sube la foto de tu matrícula, carnet del colegio de psicólogos o título."
+          error={errores.credencialUrl}
+        >
+          <Input
+            id={`${uid}-credencial`}
+            type="url"
+            value={form.credencialUrl}
+            onChange={(e) => set("credencialUrl", e.target.value)}
+            placeholder="https://ejemplo.com/mi-titulo.jpg"
+            aria-required="true"
+            aria-invalid={!!errores.credencialUrl}
+          />
+        </FormField>
+        {/* ---------------------------------------- */}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <FormField
@@ -616,7 +645,7 @@ export function ProfileForm() {
             Guardando perfil…
           </>
         ) : (
-          "Publicar mi perfil en el directorio"
+          "Enviar perfil para verificación"
         )}
       </Button>
     </form>

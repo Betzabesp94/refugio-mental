@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { obtenerPerfiles, eliminarPerfil } from '@/lib/api';
+import { obtenerPerfiles, eliminarPerfil, actualizarEstadoPerfil } from '@/lib/api';
 import { getToken, signOut } from '@/lib/auth';
 import { ProfileTable } from '@/features/admin/ProfileTable';
 import type { Psicologo } from '@/types';
@@ -11,6 +11,7 @@ import type { Psicologo } from '@/types';
 export default function AdminPage() {
   const router = useRouter();
   const [perfiles, setPerfiles] = useState<Psicologo[]>([]);
+  console.log(perfiles)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +32,28 @@ export default function AdminPage() {
     cargar();
   }, [cargar]);
 
+  async function handleVerificar(id: string, nuevoEstado: 'APPROVED' | 'REJECTED') {
+    const token = getToken();
+    if (!token) {
+      router.replace('/admin/login');
+      return;
+    }
+
+    try {
+      // Llamada a tu API para actualizar el registro en DynamoDB
+      await actualizarEstadoPerfil(id, nuevoEstado, token);
+      
+      toast.success(`Perfil ${nuevoEstado === 'APPROVED' ? 'aprobado' : 'rechazado'}.`);
+      
+      // Actualizamos el estado localmente para no tener que recargar toda la tabla
+      setPerfiles((prev) => 
+        prev.map((p) => p.id === id ? { ...p, estadoVerificacion: nuevoEstado } : p)
+      );
+    } catch {
+      toast.error('Error al actualizar el estado del psicólogo.');
+    }
+  }
+
   async function handleEliminar(id: string) {
     const token = getToken();
     if (!token) {
@@ -38,9 +61,13 @@ export default function AdminPage() {
       return;
     }
 
-    await eliminarPerfil(id, token);
-    toast.success('Perfil eliminado correctamente.');
-    setPerfiles((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await eliminarPerfil(id, token);
+      toast.success('Perfil eliminado correctamente.');
+      setPerfiles((prev) => prev.filter((p) => p.id !== id));
+    } catch {
+      toast.error('Ocurrió un error al intentar eliminar el perfil.');
+    }
   }
 
   function handleSignOut() {
@@ -85,7 +112,11 @@ export default function AdminPage() {
       )}
 
       {!loading && !error && (
-        <ProfileTable perfiles={perfiles} onEliminar={handleEliminar} />
+        <ProfileTable 
+          perfiles={perfiles} 
+          onEliminar={handleEliminar} 
+          onVerificar={handleVerificar}
+        />
       )}
     </div>
   );

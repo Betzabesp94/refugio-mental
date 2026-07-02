@@ -40,6 +40,7 @@ export async function obtenerPerfiles(
   const res = await fetch(`${base}/v1/psicologos${qs}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Error al obtener perfiles: ${res.status}`);
   const data: ListResponse = await res.json();
+  console.log("API", data)
   return data.items;
 }
 
@@ -66,6 +67,7 @@ export async function guardarPerfil(
   datos: Omit<Psicologo, 'id' | 'creadoEn'>
 ): Promise<Psicologo> {
   const base = getBaseUrl();
+  console.log(datos)
   const res = await fetch(`${base}/v1/psicologos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -83,6 +85,7 @@ export async function guardarPerfil(
     throw new Error(message);
   }
 
+  console.log(res)
   return res.json() as Promise<Psicologo>;
 }
 
@@ -99,6 +102,37 @@ export async function eliminarPerfil(id: string, token: string): Promise<void> {
 
   if (!res.ok) {
     let message = `Error al eliminar perfil: ${res.status}`;
+    try {
+      const err = await res.json();
+      if (err?.error) message = err.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+}
+
+/**
+ * Actualiza el estado de verificación de un perfil de psicólogo.
+ * Requiere un token de administrador para la autorización en API Gateway.
+ */
+export async function actualizarEstadoPerfil(
+  id: string,
+  estado: 'APPROVED' | 'REJECTED',
+  token: string
+): Promise<void> {
+  const base = getBaseUrl();
+  const res = await fetch(`${base}/v1/psicologos/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ estadoVerificacion: estado }),
+  });
+
+  if (!res.ok) {
+    let message = `Error al actualizar estado del perfil: ${res.status}`;
     try {
       const err = await res.json();
       if (err?.error) message = err.error;

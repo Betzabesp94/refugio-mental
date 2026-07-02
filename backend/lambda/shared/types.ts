@@ -21,6 +21,8 @@ export interface Psicologo {
   redesSociales?: RedSocial[];
   aceptaDirectorio: boolean;
   creadoEn: string;
+  estadoVerificacion?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  credencialUrl: string;
 }
 
 export interface FiltrosDirectorio {

@@ -52,7 +52,12 @@ export function DirectoryGrid() {
     setFiltros((prev) => ({ ...prev, ...parcial }));
   };
 
-  const perfilesFiltrados = useFiltrarPerfiles(perfiles, filtros);
+  const perfilesAprobados = perfiles.filter(
+    (p) => p.estadoVerificacion === 'APPROVED'
+  );
+
+  // Usamos el hook con la lista ya purgada de no aprobados
+  const perfilesFiltrados = useFiltrarPerfiles(perfilesAprobados, filtros);
 
   if (error) {
     return (
@@ -81,7 +86,7 @@ export function DirectoryGrid() {
         <FilterPanel
           filtros={filtros}
           onChange={actualizarFiltros}
-          perfiles={perfiles}
+          perfiles={perfilesAprobados} 
         />
       </div>
 
