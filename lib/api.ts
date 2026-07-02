@@ -85,3 +85,26 @@ export async function guardarPerfil(
 
   return res.json() as Promise<Psicologo>;
 }
+
+/**
+ * Deletes a psychologist profile by id. Requires a valid Cognito id_token.
+ * The JWT Authorizer on API Gateway enforces authentication server-side.
+ */
+export async function eliminarPerfil(id: string, token: string): Promise<void> {
+  const base = getBaseUrl();
+  const res = await fetch(`${base}/v1/psicologos/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let message = `Error al eliminar perfil: ${res.status}`;
+    try {
+      const err = await res.json();
+      if (err?.error) message = err.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+}
