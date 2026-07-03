@@ -50,57 +50,51 @@ The central design principle is **low cost at small scale**: under typical usage
 ┌─────────────────────────────────────────────────────────────────┐
 │                     VERCEL (Edge Network)                       │
 │                                                                 │
-│   Next.js 16 — App Router                                       │
-│   ┌──────────┐  ┌────────────┐  ┌──────────────┐               │
-│   │  /        │  │ /directorio│  │ /psicologos  │  ...          │
-│   └──────────┘  └────────────┘  └──────────────┘               │
+│   Next.js — App Router                                          │
+│   ┌──────────┐  ┌────────────┐  ┌──────────────┐  ┌────────┐   │
+│   │  /        │  │ /directorio│  │ /psicologos  │  │ /admin │   │
+│   └──────────┘  └────────────┘  └──────────────┘  └────────┘   │
 │                                                                 │
 │   lib/api.ts  →  fetch(NEXT_PUBLIC_API_URL)                     │
-└────────────────────────────┬────────────────────────────────────┘
-                             │ HTTPS + CORS
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              AWS — us-east-1 (RefugioMentalStack)               │
-│                                                                 │
-│   ┌─────────────────────────────────────────────────────────┐   │
-│   │         API Gateway HTTP API                            │   │
-│   │                                                         │   │
-│   │  GET  /v1/psicologos          →  Lambda: list           │   │
-│   │  POST /v1/psicologos          →  Lambda: create         │   │
-│   │  GET  /v1/psicologos/{id}     →  Lambda: get            │   │
-│   │  PUT  /v1/psicologos/{id}     →  Lambda: update         │   │
-│   │  DEL  /v1/psicologos/{id}     →  Lambda: delete         │   │
-│   └──────────────────────────┬──────────────────────────────┘   │
-│                              │ Lambda Proxy Integration         │
-│                              ▼                                  │
-│   ┌──────────────────────────────────────────────────────────┐  │
-│   │    AWS Lambda (Node.js 22, ARM64, 256 MB)                │  │
-│   │                                                          │  │
-│   │   lambda/psicologos/                                     │  │
-│   │   ├── list.ts    (ScanCommand + filtros en memoria)      │  │
-│   │   ├── get.ts     (GetCommand por id)                     │  │
-│   │   ├── create.ts  (validación + PutCommand)               │  │
-│   │   ├── update.ts  (Get → validación → Put)                │  │
-│   │   └── delete.ts  (Get → DeleteCommand)                   │  │
-│   │                                                          │  │
-│   │   lambda/shared/                                         │  │
-│   │   ├── db.ts       (DynamoDB Document Client singleton)   │  │
-│   │   ├── response.ts (ok, created, badRequest, notFound…)   │  │
-│   │   └── validate.ts (validación de campos del formulario)  │  │
-│   └──────────────────────────┬───────────────────────────────┘  │
-│                              │ AWS SDK v3                       │
-│                              ▼                                  │
-│   ┌──────────────────────────────────────────────────────────┐  │
-│   │    Amazon DynamoDB  (PAY_PER_REQUEST)                    │  │
-│   │    Tabla: refugio-mental-psicologos                      │  │
-│   │                                                          │  │
-│   │    PK: id (String)                                       │  │
-│   │                                                          │  │
-│   │    GSI 1: pais-creadoEn-index                            │  │
-│   │    GSI 2: especialidad-creadoEn-index                    │  │
-│   │    GSI 3: modalidad-creadoEn-index                       │  │
-│   └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+└────────────┬───────────────────────────────────────────────────┘
+             │ HTTPS + CORS          │ Cognito SDK (auth admin)
+             ▼                       ▼
+┌─────────────────────────┐  ┌──────────────────────────────────┐
+│  AWS — RefugioMentalStack│  │  Amazon Cognito User Pool        │
+│                         │  │  NEXT_PUBLIC_COGNITO_USER_POOL_ID │
+│  API Gateway HTTP API   │  │  NEXT_PUBLIC_COGNITO_CLIENT_ID    │
+│                         │  └──────────────────────────────────┘
+│  ── Rutas públicas ──   │
+│  GET  /v1/psicologos  → list       │
+│  POST /v1/psicologos  → create     │
+│  GET  /v1/psicologos/{id} → get    │
+│                         │
+│  ── Rutas admin (JWT) ──│
+│  GET    /v1/admin/psicologos → listAdmin  │
+│  PATCH  /v1/psicologos/{id} → verify      │
+│  PUT    /v1/psicologos/{id} → update      │
+│  DELETE /v1/psicologos/{id} → delete      │
+│             │ Lambda Proxy Integration    │
+│             ▼                            │
+│  AWS Lambda (Node.js 22, ARM64, 256 MB)  │
+│                                          │
+│  lambda/psicologos/                      │
+│  ├── list.ts      (Scan APPROVED only)   │
+│  ├── listAdmin.ts (Scan all — admin)     │
+│  ├── get.ts       (GetCommand por id)    │
+│  ├── create.ts    (validación + Put)     │
+│  ├── update.ts    (Get → validación → Put│
+│  ├── verify.ts    (UpdateCommand estado) │
+│  └── delete.ts    (Get → DeleteCommand)  │
+│             │ AWS SDK v3                 │
+│             ▼                            │
+│  Amazon DynamoDB  (PAY_PER_REQUEST)      │
+│  Tabla: refugio-mental-psicologos        │
+│  PK: id (String)                        │
+│  GSI 1: pais-creadoEn-index             │
+│  GSI 2: especialidad-creadoEn-index     │
+│  GSI 3: modalidad-creadoEn-index        │
+└──────────────────────────────────────────┘
 ```
 
 ---
@@ -114,33 +108,47 @@ The central design principle is **low cost at small scale**: under typical usage
 El frontend es una aplicación **Next.js 16 con App Router** desplegada en Vercel. Todas las páginas son Server Components por defecto; los componentes interactivos (directorio, formulario) son Client Components marcados con `"use client"`.
 
 **Acceso a datos:**  
-La capa de acceso a datos vive en `lib/api.ts`. Expone tres funciones asíncronas con las mismas firmas que tenía el anterior `lib/storage.ts` (basado en localStorage), lo que garantiza que el resto de la aplicación no necesitó cambios para adoptar el backend real.
+La capa de acceso a datos vive en `lib/api.ts`. Expone funciones asíncronas para el directorio público y para el panel admin.
 
 ```typescript
-obtenerPerfiles(filtros?)  // GET /v1/psicologos
-obtenerPerfil(id)          // GET /v1/psicologos/{id}
-guardarPerfil(datos)       // POST /v1/psicologos
+// Público
+obtenerPerfiles(filtros?)           // GET /v1/psicologos
+obtenerPerfil(id)                   // GET /v1/psicologos/{id}
+guardarPerfil(datos)                // POST /v1/psicologos
+
+// Admin (requieren token JWT de Cognito)
+obtenerPerfilesAdmin(token)         // GET /v1/admin/psicologos
+actualizarEstadoPerfil(id, estado, token)  // PATCH /v1/psicologos/{id}
+eliminarPerfil(id, token)           // DELETE /v1/psicologos/{id}
 ```
 
 **Hook de perfiles:**  
-`hooks/usePerfiles.ts` encapsula el estado de carga (`cargando`), error (`error`) y la lista de perfiles. Es el único punto de acoplamiento entre la UI y la capa de datos.
+`hooks/usePerfiles.ts` encapsula el estado de carga (`cargando`), error (`error`) y la lista de perfiles para el directorio público. El panel admin (`app/admin/page.tsx`) gestiona su propio estado.
 
-**Variables de entorno:**  
-Solo se necesita una variable en el cliente:
+**Autenticación admin:**  
+`lib/auth.ts` encapsula el flujo de autenticación con Amazon Cognito (sign-in, sign-out, obtener token). El panel en `/admin` requiere un JWT válido almacenado en `localStorage`; las rutas protegidas de API Gateway lo validan server-side.
+
+**Variables de entorno:**
 
 ```
 NEXT_PUBLIC_API_URL=https://<api-id>.execute-api.<region>.amazonaws.com
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=<region>_<id>
+NEXT_PUBLIC_COGNITO_CLIENT_ID=<client-id>
+NEXT_PUBLIC_COGNITO_REGION=us-east-1
 ```
 
 ### EN
 
-The frontend is a **Next.js 16 App Router** application deployed on Vercel. All pages are Server Components by default; interactive components (directory, form) are Client Components marked with `"use client"`.
+The frontend is a **Next.js App Router** application deployed on Vercel. All pages are Server Components by default; interactive components (directory, form, admin panel) are Client Components marked with `"use client"`.
 
 **Data access:**  
-The data access layer lives in `lib/api.ts`. It exposes three async functions with the same signatures as the previous `lib/storage.ts` (localStorage-based), ensuring the rest of the application required no changes to adopt the real backend.
+The data access layer lives in `lib/api.ts`. It exposes async functions for both the public directory and the admin panel (token-protected).
+
+**Admin authentication:**  
+`lib/auth.ts` wraps the Cognito sign-in / sign-out / token retrieval flow. Protected API routes enforce JWT validation server-side via API Gateway JWT Authorizer.
 
 **Profile hook:**  
-`hooks/usePerfiles.ts` encapsulates loading state (`cargando`), error state (`error`), and the profile list. It is the single coupling point between the UI and the data layer.
+`hooks/usePerfiles.ts` encapsulates loading state (`cargando`), error state (`error`), and the profile list for the public directory.
 
 ---
 
@@ -162,11 +170,12 @@ backend/
 │   └── constructs/
 │       ├── database-construct.ts       # DynamoDB + GSIs
 │       ├── lambda-construct.ts         # Funciones + IAM
-│       └── api-construct.ts            # HTTP API + rutas + CORS
+│       ├── cognito-construct.ts        # Cognito User Pool + cliente
+│       └── api-construct.ts            # HTTP API + rutas + CORS + JWT Authorizer
 ├── lambda/
-│   ├── psicologos/  (list, get, create, update, delete)
+│   ├── psicologos/  (list, listAdmin, get, create, update, verify, delete)
 │   └── shared/      (db, response, validate, types)
-├── shared/types/psicologo.ts           # Tipos compartidos
+├── shared/types/psicologo.ts           # Tipos compartidos frontend/backend
 └── scripts/seed.ts                     # Poblar DynamoDB inicial
 ```
 
@@ -182,9 +191,9 @@ backend/
 
 ### EN
 
-The backend is a collection of **AWS Lambda** functions written in TypeScript and compiled with esbuild. Each function has a single responsibility (CRUD). Infrastructure is fully defined with **AWS CDK** in the `backend/` directory.
+The backend is a collection of **AWS Lambda** functions written in TypeScript and compiled with esbuild. Each function has a single responsibility. Infrastructure is fully defined with **AWS CDK** in the `backend/` directory.
 
-**IAM least privilege:** Each function has only the DynamoDB permissions it needs — no shared overly-permissive roles.
+**IAM least privilege:** Each function has only the DynamoDB permissions it needs. Admin routes are protected by a Cognito JWT Authorizer at the API Gateway level.
 
 ---
 
@@ -215,6 +224,8 @@ Se usa **Amazon DynamoDB** en modo `PAY_PER_REQUEST` (on-demand). No hay capacid
 | `redesSociales` | List? | `[{plataforma, url}]` |
 | `aceptaDirectorio` | Boolean | Siempre `true` (validado en Lambda) |
 | `creadoEn` | String | ISO 8601, generado en Lambda |
+| `estadoVerificacion` | String | `PENDING`, `APPROVED` o `REJECTED` — gestionado por admin |
+| `credencialUrl` | String | URL del certificado/credencial profesional |
 
 **Índices Secundarios Globales (GSI):**
 
@@ -289,20 +300,45 @@ Crea un nuevo perfil. / Creates a new profile.
 
 ---
 
-### `PUT /v1/psicologos/{id}`
+### `GET /v1/admin/psicologos` 🔒
 
-Actualiza un perfil existente. Reservado para panel administrativo futuro. / Updates an existing profile. Reserved for the future admin panel.
+Devuelve **todos** los perfiles sin filtrar por `estadoVerificacion` (incluye PENDING, APPROVED y REJECTED). Requiere JWT de Cognito. / Returns **all** profiles regardless of `estadoVerificacion`. Requires Cognito JWT.
+
+**Response 200:**
+```json
+{ "items": [Psicologo], "count": 12 }
+```
+
+---
+
+### `PATCH /v1/psicologos/{id}` 🔒
+
+Actualiza el `estadoVerificacion` de un perfil. Usado por el panel admin para aprobar o rechazar. / Updates `estadoVerificacion`. Used by the admin panel to approve or reject.
+
+**Body:** `{ "estadoVerificacion": "APPROVED" | "REJECTED" }`
+
+**Response 200:** `{ "message": "Estado actualizado correctamente" }`  
+**Response 400:** Estado inválido  
+**Response 404:** Perfil no encontrado
+
+---
+
+### `PUT /v1/psicologos/{id}` 🔒
+
+Actualiza un perfil existente (admin). / Updates an existing profile (admin).
 
 **Response 200:** `Psicologo` actualizado  
 **Response 404:** Perfil no encontrado
 
 ---
 
-### `DELETE /v1/psicologos/{id}`
+### `DELETE /v1/psicologos/{id}` 🔒
 
-Elimina un perfil. Reservado para panel administrativo futuro. / Deletes a profile. Reserved for the future admin panel.
+Elimina un perfil (admin). / Deletes a profile (admin).
 
 **Response 204:** Sin cuerpo / No body
+
+> 🔒 Requiere header `Authorization: Bearer <cognito-id-token>` / Requires `Authorization: Bearer <cognito-id-token>` header.
 
 ---
 
@@ -316,7 +352,8 @@ Elimina un perfil. Reservado para panel administrativo futuro. / Deletes a profi
 - **IAM least privilege:** Cada Lambda tiene exactamente los permisos que necesita sobre DynamoDB.
 - **Sin credenciales en código:** La URL de la API es pública por diseño (es un directorio público). Las credenciales AWS nunca se incluyen en variables `NEXT_PUBLIC_`.
 - **Validación en servidor:** Toda validación ocurre en Lambda antes de escribir en DynamoDB. Las validaciones del formulario React son solo UX, no la barrera de seguridad.
-- **Sin autenticación:** Deliberado para el MVP. Mitigación: validar `aceptaDirectorio: true` en Lambda. Roadmap: Rate limiting + Cognito.
+- **Autenticación admin:** Las rutas `/v1/admin/*`, PATCH, PUT y DELETE están protegidas por un JWT Authorizer de Cognito en API Gateway. Solo usuarios del User Pool pueden acceder.
+- **Registro público sin auth:** Deliberado para facilitar la inscripción de psicólogos voluntarios. Los perfiles nuevos quedan en estado `PENDING` hasta que un admin los apruebe desde el panel. Roadmap: Rate limiting.
 
 ### EN
 
@@ -324,7 +361,8 @@ Elimina un perfil. Reservado para panel administrativo futuro. / Deletes a profi
 - **IAM least privilege:** Each Lambda has exactly the DynamoDB permissions it needs.
 - **No credentials in code:** The API URL is public by design (it's a public directory). AWS credentials are never included in `NEXT_PUBLIC_` variables.
 - **Server-side validation:** All validation occurs in Lambda before writing to DynamoDB. React form validations are UX only, not the security barrier.
-- **No authentication:** Deliberate for the MVP. Mitigation: validate `aceptaDirectorio: true` in Lambda. Roadmap: Rate limiting + Cognito.
+- **Admin authentication:** Admin routes are protected by a Cognito JWT Authorizer at API Gateway. Only User Pool members can access `/v1/admin/*`, PATCH, PUT, and DELETE.
+- **No public authentication:** Deliberate to reduce friction for volunteer registration. New profiles start as `PENDING` until approved by an admin. Roadmap: Rate limiting.
 
 ---
 
@@ -362,6 +400,7 @@ All services stay within AWS Free Tier at expected volume. Outside Free Tier: < 
 |-------|---------|--------|
 | 2026-07-01 | v1.0 | MVP inicial con LocalStorage y seed data |
 | 2026-07-01 | v2.0 | Migración a AWS serverless: DynamoDB + Lambda + API Gateway + CDK |
+| 2026-07-03 | v2.1 | Panel admin con Cognito auth, `estadoVerificacion` (PENDING/APPROVED/REJECTED), `credencialUrl`, endpoint `GET /v1/admin/psicologos`, lambdas `listAdmin` y `verify` |
 
 ---
 

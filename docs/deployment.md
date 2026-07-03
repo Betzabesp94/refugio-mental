@@ -117,7 +117,7 @@ Un bucket S3 y roles IAM internos de CDK. No generan costo significativo.
 cdk diff
 ```
 
-Verás un resumen de todos los recursos que CDK va a crear: la tabla DynamoDB, las 5 funciones Lambda, el HTTP API de API Gateway y sus rutas.
+Verás un resumen de todos los recursos que CDK va a crear: la tabla DynamoDB, el Cognito User Pool, las 7 funciones Lambda, el HTTP API de API Gateway y sus rutas.
 
 #### Paso 2.4 — Desplegar el stack
 
@@ -139,11 +139,13 @@ El proceso tarda aproximadamente **2-3 minutos**. Al finalizar verás:
 ✅  RefugioMentalStack
 
 Outputs:
-RefugioMentalStack.ApiUrl   = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
-RefugioMentalStack.TableName = refugio-mental-psicologos
+RefugioMentalStack.ApiUrl           = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
+RefugioMentalStack.TableName        = refugio-mental-psicologos
+RefugioMentalStack.UserPoolId       = us-east-1_XXXXXXXXX
+RefugioMentalStack.UserPoolClientId = xxxxxxxxxxxxxxxxxxxx
 ```
 
-**Guarda el valor de `ApiUrl`** — lo necesitarás para configurar el frontend.
+**Guarda todos los outputs** — los necesitarás para configurar el frontend y crear el usuario admin.
 
 ### EN
 
@@ -173,7 +175,7 @@ An S3 bucket and CDK internal IAM roles. No significant cost.
 cdk diff
 ```
 
-You'll see a summary of all resources CDK will create: the DynamoDB table, 5 Lambda functions, the HTTP API Gateway, and its routes.
+You'll see a summary of all resources CDK will create: the DynamoDB table, Cognito User Pool, 7 Lambda functions, the HTTP API Gateway, and its routes.
 
 #### Step 2.4 — Deploy the stack
 
@@ -187,11 +189,13 @@ The process takes approximately **2-3 minutes**. At the end you'll see:
 ✅  RefugioMentalStack
 
 Outputs:
-RefugioMentalStack.ApiUrl   = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
-RefugioMentalStack.TableName = refugio-mental-psicologos
+RefugioMentalStack.ApiUrl           = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
+RefugioMentalStack.TableName        = refugio-mental-psicologos
+RefugioMentalStack.UserPoolId       = us-east-1_XXXXXXXXX
+RefugioMentalStack.UserPoolClientId = xxxxxxxxxxxxxxxxxxxx
 ```
 
-**Save the `ApiUrl` value** — you'll need it to configure the frontend.
+**Save all outputs** — you'll need them to configure the frontend and create the admin user.
 
 ---
 
@@ -235,6 +239,56 @@ If you use a different region, replace `us-east-1` with your region.
 
 ---
 
+## 3b. Crear el usuario administrador / Create the admin user
+
+---
+
+### ES
+
+El panel de administración en `/admin` requiere un usuario en el Cognito User Pool. Créalo con la AWS CLI usando los IDs del output del paso 2.4:
+
+```bash
+# Crear el usuario
+aws cognito-idp admin-create-user \
+  --user-pool-id <UserPoolId> \
+  --username admin@ejemplo.com \
+  --temporary-password "Abc123!Temporal" \
+  --message-action SUPPRESS
+
+# Establecer contraseña permanente (evita el flujo de cambio forzado)
+aws cognito-idp admin-set-user-password \
+  --user-pool-id <UserPoolId> \
+  --username admin@ejemplo.com \
+  --password "TuContraseñaSegura123!" \
+  --permanent
+```
+
+Guarda el email y la contraseña — los usarás para iniciar sesión en `/admin/login`.
+
+### EN
+
+The admin panel at `/admin` requires a user in the Cognito User Pool. Create one using the AWS CLI with the IDs from step 2.4:
+
+```bash
+# Create the user
+aws cognito-idp admin-create-user \
+  --user-pool-id <UserPoolId> \
+  --username admin@example.com \
+  --temporary-password "Abc123!Temp" \
+  --message-action SUPPRESS
+
+# Set a permanent password (skips the forced change flow)
+aws cognito-idp admin-set-user-password \
+  --user-pool-id <UserPoolId> \
+  --username admin@example.com \
+  --password "YourSecurePassword123!" \
+  --permanent
+```
+
+Save the email and password — you'll use them to sign in at `/admin/login`.
+
+---
+
 ## 4. Ejecutar el frontend localmente / Run frontend locally
 
 ---
@@ -256,10 +310,13 @@ npm install
 cp .example.env .env.local
 ```
 
-Abre `.env.local` y reemplaza el valor con la `ApiUrl` que obtuviste en el paso 2.4:
+Abre `.env.local` y rellena los valores con los outputs del paso 2.4:
 
 ```env
 NEXT_PUBLIC_API_URL=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
+NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_COGNITO_REGION=us-east-1
 ```
 
 > ⚠️ **No commits:** `.env.local` está en `.gitignore`. Nunca lo incluyas en un commit.
@@ -289,10 +346,13 @@ npm install
 cp .example.env .env.local
 ```
 
-Open `.env.local` and replace the placeholder with the `ApiUrl` from step 2.4:
+Open `.env.local` and fill in the values from the step 2.4 outputs:
 
 ```env
 NEXT_PUBLIC_API_URL=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
+NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_COGNITO_REGION=us-east-1
 ```
 
 > ⚠️ **No commits:** `.env.local` is in `.gitignore`. Never include it in a commit.
@@ -414,10 +474,10 @@ Una respuesta `200` con `{"items": [...]}` confirma que el stack funciona correc
 
 #### Verificar desde el navegador
 
-1. Abre `http://localhost:3000/directorio`.
-2. Deberías ver los 6 perfiles de ejemplo cargados desde DynamoDB.
-3. Usa el formulario en `/psicologos/registrar` para crear un perfil real.
-4. El nuevo perfil debería aparecer inmediatamente en el directorio.
+1. Abre `http://localhost:3000/directorio`. Deberías ver los perfiles aprobados cargados desde DynamoDB.
+2. Usa el formulario en `/psicologos/registrar` para crear un perfil real. El perfil quedará en estado `PENDING`.
+3. Ve a `http://localhost:3000/admin/login`, inicia sesión con el usuario del paso 3b y aprueba el perfil desde el panel.
+4. Vuelve al directorio — el perfil aprobado ahora aparece en la lista.
 
 ### EN
 
@@ -432,10 +492,10 @@ A `200` response with `{"items": [...]}` confirms the stack works correctly.
 
 #### Verify from the browser
 
-1. Open `http://localhost:3000/directorio`.
-2. You should see the 6 example profiles loaded from DynamoDB.
-3. Use the form at `/psicologos/registrar` to create a real profile.
-4. The new profile should appear immediately in the directory.
+1. Open `http://localhost:3000/directorio`. You should see the approved profiles loaded from DynamoDB.
+2. Use the form at `/psicologos/registrar` to create a real profile. It will be created with `PENDING` status.
+3. Go to `http://localhost:3000/admin/login`, sign in with the user from step 3b, and approve the profile from the admin panel.
+4. Return to the directory — the approved profile now appears in the list.
 
 ---
 
