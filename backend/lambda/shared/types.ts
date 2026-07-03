@@ -33,7 +33,7 @@ export interface FiltrosDirectorio {
   pais?: string;
 }
 
-export interface ListResponse {
+export interface ListPsicologosResponse {
   items: Psicologo[];
   count: number;
 }

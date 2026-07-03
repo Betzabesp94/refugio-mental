@@ -23,7 +23,7 @@ export interface Psicologo {
   creadoEn: string;
   /** true = dato ficticio de ejemplo incluido en seed */
   esSeed?: boolean;
-  estadoVerificacion?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  estadoVerificacion?: "PENDING" | "APPROVED" | "REJECTED";
   credencialUrl: string;
 }
 
@@ -33,4 +33,10 @@ export interface FiltrosDirectorio {
   idioma: string;
   modalidad: string;
   pais: string;
+  estadoVerificacion: "PENDING" | "APPROVED" | "REJECTED";
+}
+
+export interface ListPsicologosResponse {
+  items: Psicologo[];
+  count: number;
 }

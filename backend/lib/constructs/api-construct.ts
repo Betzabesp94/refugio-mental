@@ -76,6 +76,14 @@ export class ApiConstruct extends Construct {
 
     // --- Admin routes (JWT required) ---
 
+    // GET /v1/admin/psicologos — list ALL profiles regardless of estadoVerificacion (admin only)
+    this.httpApi.addRoutes({
+      path: '/v1/admin/psicologos',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration('ListAdminIntegration', handlers.listAdmin),
+      authorizer: adminAuthorizer,
+    });
+
     // DELETE /v1/psicologos/{id} — remove profile (admin only)
     this.httpApi.addRoutes({
       path: '/v1/psicologos/{id}',

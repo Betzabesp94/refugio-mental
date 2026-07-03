@@ -1,87 +1,106 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { obtenerPerfiles, eliminarPerfil, actualizarEstadoPerfil } from '@/lib/api';
-import { getToken, signOut } from '@/lib/auth';
-import { ProfileTable } from '@/features/admin/ProfileTable';
-import type { Psicologo } from '@/types';
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  obtenerPerfilesAdmin,
+  eliminarPerfil,
+  actualizarEstadoPerfil,
+} from "@/lib/api";
+import { getToken, signOut } from "@/lib/auth";
+import { ProfileTable } from "@/features/admin/ProfileTable";
+import type { Psicologo } from "@/types";
 
 export default function AdminPage() {
   const router = useRouter();
   const [perfiles, setPerfiles] = useState<Psicologo[]>([]);
-  console.log(perfiles)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
+    const token = getToken();
+    if (!token) {
+      router.replace("/admin/login");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const data = await obtenerPerfiles();
+      const data = await obtenerPerfilesAdmin(token);
       setPerfiles(data);
     } catch {
-      setError('No se pudieron cargar los perfiles.');
+      setError("No se pudieron cargar los perfiles.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
 
-  async function handleVerificar(id: string, nuevoEstado: 'APPROVED' | 'REJECTED') {
+  async function handleVerificar(
+    id: string,
+    nuevoEstado: "APPROVED" | "REJECTED",
+  ) {
     const token = getToken();
     if (!token) {
-      router.replace('/admin/login');
+      router.replace("/admin/login");
       return;
     }
 
     try {
       // Llamada a tu API para actualizar el registro en DynamoDB
       await actualizarEstadoPerfil(id, nuevoEstado, token);
-      
-      toast.success(`Perfil ${nuevoEstado === 'APPROVED' ? 'aprobado' : 'rechazado'}.`);
-      
+
+      toast.success(
+        `Perfil ${nuevoEstado === "APPROVED" ? "aprobado" : "rechazado"}.`,
+      );
+
       // Actualizamos el estado localmente para no tener que recargar toda la tabla
-      setPerfiles((prev) => 
-        prev.map((p) => p.id === id ? { ...p, estadoVerificacion: nuevoEstado } : p)
+      setPerfiles((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, estadoVerificacion: nuevoEstado } : p,
+        ),
       );
     } catch {
-      toast.error('Error al actualizar el estado del psicólogo.');
+      toast.error("Error al actualizar el estado del psicólogo.");
     }
   }
 
   async function handleEliminar(id: string) {
     const token = getToken();
     if (!token) {
-      router.replace('/admin/login');
+      router.replace("/admin/login");
       return;
     }
 
     try {
       await eliminarPerfil(id, token);
-      toast.success('Perfil eliminado correctamente.');
+      toast.success("Perfil eliminado correctamente.");
       setPerfiles((prev) => prev.filter((p) => p.id !== id));
     } catch {
-      toast.error('Ocurrió un error al intentar eliminar el perfil.');
+      toast.error("Ocurrió un error al intentar eliminar el perfil.");
     }
   }
 
   function handleSignOut() {
     signOut();
-    router.replace('/admin/login');
+    router.replace("/admin/login");
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Panel de administración</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Panel de administración
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Cargando…' : `${perfiles.length} perfil${perfiles.length !== 1 ? 'es' : ''} registrado${perfiles.length !== 1 ? 's' : ''}`}
+            {loading
+              ? "Cargando…"
+              : `${perfiles.length} perfil${perfiles.length !== 1 ? "es" : ""} registrado${perfiles.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <button
@@ -112,9 +131,9 @@ export default function AdminPage() {
       )}
 
       {!loading && !error && (
-        <ProfileTable 
-          perfiles={perfiles} 
-          onEliminar={handleEliminar} 
+        <ProfileTable
+          perfiles={perfiles}
+          onEliminar={handleEliminar}
           onVerificar={handleVerificar}
         />
       )}

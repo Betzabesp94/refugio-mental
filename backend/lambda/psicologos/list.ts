@@ -2,7 +2,7 @@ import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { docClient, TABLE_NAME } from '../shared/db';
 import { ok, internalError } from '../shared/response';
-import type { Psicologo } from '../shared/types';
+import type { Psicologo, ListPsicologosResponse } from '../shared/types';
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
   const params = event.queryStringParameters ?? {};
@@ -49,7 +49,8 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
     items.sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
 
-    return ok({ items, count: items.length });
+    const response: ListPsicologosResponse = { items, count: items.length };
+    return ok(response);
   } catch (err) {
     console.error('Error listing psicologos', err);
     return internalError();

@@ -11,6 +11,7 @@ interface LambdaConstructProps {
 
 export interface LambdaHandlers {
   list: NodejsFunction;
+  listAdmin: NodejsFunction;
   get: NodejsFunction;
   create: NodejsFunction;
   update: NodejsFunction;
@@ -54,6 +55,7 @@ export class LambdaConstruct extends Construct {
 
     this.handlers = {
       list: createFn('ListPsicologos', 'list.ts'),
+      listAdmin: createFn('ListPsicologosAdmin', 'listAdmin.ts'),
       get: createFn('GetPsicologo', 'get.ts'),
       create: createFn('CreatePsicologo', 'create.ts'),
       update: createFn('UpdatePsicologo', 'update.ts'),
@@ -63,6 +65,7 @@ export class LambdaConstruct extends Construct {
 
     // Minimal IAM permissions per function
     table.grantReadData(this.handlers.list);
+    table.grantReadData(this.handlers.listAdmin);
     table.grantReadData(this.handlers.get);
     table.grantWriteData(this.handlers.create);
     table.grantReadWriteData(this.handlers.update);
