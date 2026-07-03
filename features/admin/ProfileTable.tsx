@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Psicologo } from '@/types';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import * as Dialog from '@radix-ui/react-dialog';
 import { CheckCircle, XCircle, Clock, X, Eye, FileQuestion } from 'lucide-react';
 
 interface ProfileTableProps {
@@ -162,33 +163,33 @@ export function ProfileTable({ perfiles, onEliminar, onVerificar }: ProfileTable
         </table>
       </div>
 
-      {/* Modal Global para ver la credencial y aprobar/rechazar */}
-      <AlertDialog.Root 
-        open={!!credencialPerfil} 
+      {/* Modal para ver la credencial (no destructivo: usa Dialog, no AlertDialog) */}
+      <Dialog.Root
+        open={!!credencialPerfil}
         onOpenChange={(open) => !open && setCredencialPerfil(null)}
       >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh] overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
-            
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh] overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+
             {/* Header del modal */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <AlertDialog.Title className="text-lg font-semibold text-gray-900">
+              <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Credencial de {credencialPerfil?.nombre} {credencialPerfil?.apellido}
-              </AlertDialog.Title>
-              <AlertDialog.Cancel asChild>
+              </Dialog.Title>
+              <Dialog.Close asChild>
                 <button className="text-gray-400 hover:text-gray-600 rounded-full p-1 hover:bg-gray-100 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
-              </AlertDialog.Cancel>
+              </Dialog.Close>
             </div>
 
             {/* Contenido de la foto */}
             <div className="p-6 overflow-y-auto bg-gray-50 flex-1 flex flex-col items-center justify-center min-h-[300px]">
               {credencialPerfil?.credencialUrl ? (
-                <img 
-                  src={credencialPerfil.credencialUrl} 
-                  alt={`Credencial de ${credencialPerfil.nombre}`} 
+                <img
+                  src={credencialPerfil.credencialUrl}
+                  alt={`Credencial de ${credencialPerfil.nombre}`}
                   className="max-w-full h-auto max-h-[50vh] object-contain rounded-lg shadow-sm border border-gray-200 bg-white"
                 />
               ) : (
@@ -199,13 +200,15 @@ export function ProfileTable({ perfiles, onEliminar, onVerificar }: ProfileTable
               )}
             </div>
 
-            {/* Footer con los botones de acción */}
+            {/* Footer con los botones de acción Aprobar/Rechazar */}
             <div className="px-6 py-4 border-t border-gray-100 bg-white flex items-center justify-between">
               <span className="text-sm text-gray-500 font-medium">
-                Estado actual: {
-                  credencialPerfil?.estadoVerificacion === 'APPROVED' ? 'Aprobado' :
-                  credencialPerfil?.estadoVerificacion === 'REJECTED' ? 'Rechazado' : 'Pendiente'
-                }
+                Estado actual:{' '}
+                {credencialPerfil?.estadoVerificacion === 'APPROVED'
+                  ? 'Aprobado'
+                  : credencialPerfil?.estadoVerificacion === 'REJECTED'
+                  ? 'Rechazado'
+                  : 'Pendiente'}
               </span>
               <div className="flex gap-3">
                 <button
@@ -227,9 +230,9 @@ export function ProfileTable({ perfiles, onEliminar, onVerificar }: ProfileTable
               </div>
             </div>
 
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }

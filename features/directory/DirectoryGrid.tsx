@@ -52,11 +52,12 @@ export function DirectoryGrid() {
     setFiltros((prev) => ({ ...prev, ...parcial }));
   };
 
+  // El backend ya filtra por APPROVED; este filtro es defensa en profundidad
+  // por si el caché local contiene datos desactualizados.
   const perfilesAprobados = perfiles.filter(
     (p) => p.estadoVerificacion === 'APPROVED'
   );
 
-  // Usamos el hook con la lista ya purgada de no aprobados
   const perfilesFiltrados = useFiltrarPerfiles(perfilesAprobados, filtros);
 
   if (error) {

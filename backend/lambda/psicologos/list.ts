@@ -13,8 +13,8 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     const result = await docClient.send(
       new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: 'aceptaDirectorio = :activo',
-        ExpressionAttributeValues: { ':activo': true },
+        FilterExpression: 'aceptaDirectorio = :activo AND estadoVerificacion = :aprobado',
+        ExpressionAttributeValues: { ':activo': true, ':aprobado': 'APPROVED' },
       })
     );
     console.log('DynamoDB scan', { ms: Date.now() - start, count: result.Count });
