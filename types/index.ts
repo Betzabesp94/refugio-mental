@@ -17,15 +17,16 @@ export interface Psicologo {
   modalidad: Modalidad;
   biografia: string;
   calendlyUrl: string;
-  email?: string;
+  email: string;
   redesSociales?: RedSocial[];
   aceptaDirectorio: boolean;
   creadoEn: string;
-  /** true = dato ficticio de ejemplo incluido en seed */
   esSeed?: boolean;
   estadoVerificacion?: "PENDING" | "APPROVED" | "REJECTED";
-  credencialUrl?: string;
+  credencialUrl: string;
 }
+
+export type PsicologoPublico = Omit<Psicologo, "credencialUrl" | "email">;
 
 export interface FiltrosDirectorio {
   busqueda: string;
@@ -37,6 +38,11 @@ export interface FiltrosDirectorio {
 }
 
 export interface ListPsicologosResponse {
+  items: PsicologoPublico[];
+  count: number;
+}
+
+export interface ListPsicologosAdminResponse {
   items: Psicologo[];
   count: number;
 }

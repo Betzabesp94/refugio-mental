@@ -2,6 +2,7 @@ import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { docClient, TABLE_NAME } from '../shared/db';
 import { ok, notFound, badRequest, internalError } from '../shared/response';
+import type { Psicologo } from '../shared/types';
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
   const id = event.pathParameters?.id;
@@ -18,11 +19,17 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
     if (!result.Item) return notFound();
 
+    const psicologo = result.Item as Psicologo;
+
+    if (!psicologo.aceptaDirectorio || psicologo.estadoVerificacion !== 'APPROVED') {
+      return notFound(); 
+    }
+
     const { 
       credencialUrl,  
       email, 
       ...psicologoFiltrado 
-    } = result.Item;
+    } = psicologo;
 
     return ok(psicologoFiltrado);
     

@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Psicologo } from "@/types";
+import type { PsicologoPublico } from "@/types";
 
 const modalidadLabel: Record<string, { label: string; icon: typeof Globe }> = {
   online: { label: "Online", icon: Globe },
@@ -22,7 +22,7 @@ const modalidadLabel: Record<string, { label: string; icon: typeof Globe }> = {
 };
 
 interface ProfileCardProps {
-  psicologo: Psicologo;
+  psicologo: PsicologoPublico;
 }
 
 export function ProfileCard({ psicologo }: ProfileCardProps) {
@@ -59,7 +59,7 @@ export function ProfileCard({ psicologo }: ProfileCardProps) {
               {psicologo.estadoVerificacion === 'APPROVED' && (
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger className="flex-shrink-0 cursor-help mt-0.5 border-none bg-transparent p-0">
+                    <TooltipTrigger type="button" aria-label="Profesional verificado" className="flex-shrink-0 cursor-help mt-0.5 border-none bg-transparent p-0">
                       <BadgeCheck className="h-5 w-5 text-blue-500" />
                     </TooltipTrigger>
                     <TooltipContent>

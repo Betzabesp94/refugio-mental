@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Psicologo, FiltrosDirectorio } from "@/types";
+import { Psicologo, FiltrosDirectorio, PsicologoPublico } from "@/types";
 import { obtenerPerfiles, guardarPerfil } from "@/lib/api";
 
 export function usePerfiles() {
-  const [perfiles, setPerfiles] = useState<Psicologo[]>([]);
+  const [perfiles, setPerfiles] = useState<PsicologoPublico[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +43,7 @@ export function usePerfiles() {
 }
 
 export function useFiltrarPerfiles(
-  perfiles: Psicologo[],
+  perfiles: PsicologoPublico[],
   filtros: FiltrosDirectorio,
 ) {
   return perfiles.filter((p) => {

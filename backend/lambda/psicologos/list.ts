@@ -49,13 +49,13 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
     items.sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
 
-    const itemsFiltrados = items.map(p => {
+    const itemsFiltrados = items.map((p) => {
       const { credencialUrl, email, ...resto } = p;
-      return resto;
+      return resto; 
     });
 
     const response: ListPsicologosResponse = { 
-      items: itemsFiltrados as Psicologo[], 
+      items: itemsFiltrados, 
       count: itemsFiltrados.length 
     };
     

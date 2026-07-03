@@ -21,24 +21,23 @@ export interface Psicologo {
   redesSociales?: RedSocial[];
   aceptaDirectorio: boolean;
   creadoEn: string;
-  estadoVerificacion?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  esSeed?: boolean;
+  estadoVerificacion?: "PENDING" | "APPROVED" | "REJECTED";
   credencialUrl: string;
 }
 
+export type PsicologoPublico = Omit<Psicologo, "credencialUrl" | "email">;
+
 export interface FiltrosDirectorio {
-  busqueda?: string;
-  especialidad?: string;
-  idioma?: string;
-  modalidad?: string;
-  pais?: string;
+  busqueda: string;
+  especialidad: string;
+  idioma: string;
+  modalidad: string;
+  pais: string;
+  estadoVerificacion?: "PENDING" | "APPROVED" | "REJECTED";
 }
 
 export interface ListPsicologosResponse {
-  items: Psicologo[];
+  items: PsicologoPublico[];
   count: number;
-}
-
-export interface ApiError {
-  error: string;
-  fields?: Record<string, string>;
 }

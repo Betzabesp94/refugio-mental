@@ -228,7 +228,7 @@ export function ProfileForm() {
       modalidad: form.modalidad as Modalidad,
       biografia: form.biografia.trim(),
       calendlyUrl: form.calendlyUrl.trim(),
-      email: form.email.trim() || undefined,
+      email: form.email.trim() || "",
       redesSociales: form.redesSociales.filter(
         (r) => r.plataforma && r.url
       ),

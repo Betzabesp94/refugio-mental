@@ -1,4 +1,4 @@
-import type { Psicologo, FiltrosDirectorio, ListPsicologosResponse } from '@/types';
+import type { Psicologo, PsicologoPublico, FiltrosDirectorio, ListPsicologosResponse, ListPsicologosAdminResponse } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -29,7 +29,7 @@ function getBaseUrl(): string {
  */
 export async function obtenerPerfiles(
   filtros?: Partial<FiltrosDirectorio>
-): Promise<Psicologo[]> {
+): Promise<PsicologoPublico[]> {
   const base = getBaseUrl();
   const qs = filtros ? buildQueryString(filtros) : '';
   const res = await fetch(`${base}/v1/psicologos${qs}`, { cache: 'no-store' });
@@ -42,14 +42,14 @@ export async function obtenerPerfiles(
  * Fetches a single psychologist profile by id.
  * Returns null if the profile does not exist (404).
  */
-export async function obtenerPerfil(id: string): Promise<Psicologo | null> {
+export async function obtenerPerfil(id: string): Promise<PsicologoPublico | null> {
   const base = getBaseUrl();
   const res = await fetch(`${base}/v1/psicologos/${encodeURIComponent(id)}`, {
     cache: 'no-store',
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Error al obtener perfil: ${res.status}`);
-  return res.json() as Promise<Psicologo>;
+  return res.json() as Promise<PsicologoPublico>;
 }
 
 /**
@@ -91,7 +91,7 @@ export async function obtenerPerfilesAdmin(token: string): Promise<Psicologo[]> 
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error(`Error al obtener perfiles (admin): ${res.status}`);
-  const data: ListPsicologosResponse = await res.json();
+  const data: ListPsicologosAdminResponse = await res.json();
   return data.items;
 }
 
