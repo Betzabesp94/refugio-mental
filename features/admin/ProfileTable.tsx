@@ -20,8 +20,7 @@ const MODALIDAD_LABEL: Record<string, string> = {
 export function ProfileTable({ perfiles, onEliminar, onVerificar }: ProfileTableProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
-  console.log(perfiles)
-  
+
   // Estado para controlar qué perfil está abierto en el modal de la credencial
   const [credencialPerfil, setCredencialPerfil] = useState<Psicologo | null>(null);
 
