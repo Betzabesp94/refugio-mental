@@ -1,4 +1,4 @@
-import { ExternalLink, MapPin, Globe, Monitor, Users } from "lucide-react";
+import { ExternalLink, MapPin, Globe, Monitor, Users, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,12 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Psicologo } from "@/types";
 
 const modalidadLabel: Record<string, { label: string; icon: typeof Globe }> = {
@@ -42,16 +48,34 @@ export function ProfileCard({ psicologo }: ProfileCardProps) {
               {iniciales}
             </AvatarFallback>
           </Avatar>
+          
           <div className="min-w-0">
-            <h3 className="font-semibold text-foreground truncate text-lg leading-tight">
-              {psicologo.nombre} {psicologo.apellido}
-            </h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-semibold text-foreground truncate text-lg leading-tight">
+                {psicologo.nombre} {psicologo.apellido}
+              </h3>
+              
+              {/* Check de verificación condicional */}
+              {psicologo.estadoVerificacion === 'APPROVED' && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="flex-shrink-0 cursor-help mt-0.5 border-none bg-transparent p-0">
+                      <BadgeCheck className="h-5 w-5 text-blue-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Profesional verificado</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+
             <p className="text-sm text-primary font-medium mt-0.5">
               {psicologo.especialidad}
             </p>
             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span>
+              <span className="truncate">
                 {psicologo.ciudad}, {psicologo.pais}
               </span>
             </div>

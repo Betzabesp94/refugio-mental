@@ -17,7 +17,15 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     console.log('DynamoDB get', { ms: Date.now() - start, found: !!result.Item });
 
     if (!result.Item) return notFound();
-    return ok(result.Item);
+
+    const { 
+      credencialUrl,  
+      email, 
+      ...psicologoFiltrado 
+    } = result.Item;
+
+    return ok(psicologoFiltrado);
+    
   } catch (err) {
     console.error('Error getting psicologo', err);
     return internalError();

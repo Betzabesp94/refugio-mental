@@ -24,7 +24,7 @@ export interface Psicologo {
   /** true = dato ficticio de ejemplo incluido en seed */
   esSeed?: boolean;
   estadoVerificacion?: "PENDING" | "APPROVED" | "REJECTED";
-  credencialUrl: string;
+  credencialUrl?: string;
 }
 
 export interface FiltrosDirectorio {
