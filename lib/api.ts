@@ -82,8 +82,6 @@ export async function guardarPerfil(
     }
     throw new Error(message);
   }
-
-  console.log(res)
   return res.json() as Promise<Psicologo>;
 }
 
