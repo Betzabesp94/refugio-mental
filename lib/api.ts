@@ -40,7 +40,6 @@ export async function obtenerPerfiles(
   const res = await fetch(`${base}/v1/psicologos${qs}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Error al obtener perfiles: ${res.status}`);
   const data: ListResponse = await res.json();
-  console.log("API", data)
   return data.items;
 }
 
