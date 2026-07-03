@@ -18,7 +18,7 @@ export function usePerfiles() {
     } catch (err) {
       console.error("Error al cargar perfiles:", err);
       setError(
-        "No se pudieron cargar los perfiles. Verifica tu conexión e intenta nuevamente."
+        "No se pudieron cargar los perfiles. Verifica tu conexión e intenta nuevamente.",
       );
       setPerfiles([]);
     } finally {
@@ -36,7 +36,7 @@ export function usePerfiles() {
       await cargar();
       return nuevo;
     },
-    [cargar]
+    [cargar],
   );
 
   return { perfiles, cargando, error, agregar, recargar: cargar };
@@ -44,7 +44,7 @@ export function usePerfiles() {
 
 export function useFiltrarPerfiles(
   perfiles: Psicologo[],
-  filtros: FiltrosDirectorio
+  filtros: FiltrosDirectorio,
 ) {
   return perfiles.filter((p) => {
     const termino = filtros.busqueda.toLowerCase();

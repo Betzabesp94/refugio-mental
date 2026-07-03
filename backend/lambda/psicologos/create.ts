@@ -30,6 +30,8 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     apellido: body.apellido!.trim(),
     fotografia: body.fotografia?.trim() ?? '',
     especialidad: body.especialidad!.trim(),
+    credencialUrl: body.credencialUrl?.trim() ?? '',
+    estadoVerificacion: 'PENDING',
     ciudad: body.ciudad!.trim(),
     pais: body.pais!.trim(),
     idiomas: body.idiomas!,

@@ -1,11 +1,6 @@
-import type { Psicologo, FiltrosDirectorio } from '@/types';
+import type { Psicologo, FiltrosDirectorio, ListPsicologosResponse } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-interface ListResponse {
-  items: Psicologo[];
-  count: number;
-}
 
 function buildQueryString(filtros: Partial<FiltrosDirectorio>): string {
   const params = new URLSearchParams();
@@ -39,7 +34,7 @@ export async function obtenerPerfiles(
   const qs = filtros ? buildQueryString(filtros) : '';
   const res = await fetch(`${base}/v1/psicologos${qs}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Error al obtener perfiles: ${res.status}`);
-  const data: ListResponse = await res.json();
+  const data: ListPsicologosResponse = await res.json();
   return data.items;
 }
 
@@ -82,8 +77,22 @@ export async function guardarPerfil(
     }
     throw new Error(message);
   }
-
   return res.json() as Promise<Psicologo>;
+}
+
+/**
+ * Admin-only: fetches ALL profiles regardless of estadoVerificacion.
+ * Requires a valid Cognito id_token — enforced by JWT Authorizer on API Gateway.
+ */
+export async function obtenerPerfilesAdmin(token: string): Promise<Psicologo[]> {
+  const base = getBaseUrl();
+  const res = await fetch(`${base}/v1/admin/psicologos`, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Error al obtener perfiles (admin): ${res.status}`);
+  const data: ListPsicologosResponse = await res.json();
+  return data.items;
 }
 
 /**
@@ -99,6 +108,37 @@ export async function eliminarPerfil(id: string, token: string): Promise<void> {
 
   if (!res.ok) {
     let message = `Error al eliminar perfil: ${res.status}`;
+    try {
+      const err = await res.json();
+      if (err?.error) message = err.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+}
+
+/**
+ * Actualiza el estado de verificación de un perfil de psicólogo.
+ * Requiere un token de administrador para la autorización en API Gateway.
+ */
+export async function actualizarEstadoPerfil(
+  id: string,
+  estado: 'APPROVED' | 'REJECTED',
+  token: string
+): Promise<void> {
+  const base = getBaseUrl();
+  const res = await fetch(`${base}/v1/psicologos/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ estadoVerificacion: estado }),
+  });
+
+  if (!res.ok) {
+    let message = `Error al actualizar estado del perfil: ${res.status}`;
     try {
       const err = await res.json();
       if (err?.error) message = err.error;

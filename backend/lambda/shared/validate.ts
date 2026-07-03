@@ -15,6 +15,13 @@ export function validatePsicologo(data: Partial<PsicologoInput>): ValidationResu
   if (!data.nombre?.trim()) fields.nombre = 'El nombre es obligatorio.';
   if (!data.apellido?.trim()) fields.apellido = 'El apellido es obligatorio.';
   if (!data.especialidad?.trim()) fields.especialidad = 'La especialidad es obligatoria.';
+
+  if (!data.credencialUrl?.trim()) {
+    fields.credencialUrl = 'El enlace a tu credencial es obligatorio.';
+  } else if (!data.credencialUrl.startsWith('https://')) {
+    fields.credencialUrl = 'El enlace debe comenzar con https://.';
+  }
+
   if (!data.ciudad?.trim()) fields.ciudad = 'La ciudad es obligatoria.';
   if (!data.pais?.trim()) fields.pais = 'El país es obligatorio.';
 

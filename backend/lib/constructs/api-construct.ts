@@ -33,6 +33,7 @@ export class ApiConstruct extends Construct {
           apigwv2.CorsHttpMethod.GET,
           apigwv2.CorsHttpMethod.POST,
           apigwv2.CorsHttpMethod.PUT,
+          apigwv2.CorsHttpMethod.PATCH,
           apigwv2.CorsHttpMethod.DELETE,
           apigwv2.CorsHttpMethod.OPTIONS,
         ],
@@ -75,6 +76,14 @@ export class ApiConstruct extends Construct {
 
     // --- Admin routes (JWT required) ---
 
+    // GET /v1/admin/psicologos — list ALL profiles regardless of estadoVerificacion (admin only)
+    this.httpApi.addRoutes({
+      path: '/v1/admin/psicologos',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration('ListAdminIntegration', handlers.listAdmin),
+      authorizer: adminAuthorizer,
+    });
+
     // DELETE /v1/psicologos/{id} — remove profile (admin only)
     this.httpApi.addRoutes({
       path: '/v1/psicologos/{id}',
@@ -88,6 +97,14 @@ export class ApiConstruct extends Construct {
       path: '/v1/psicologos/{id}',
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration('UpdateIntegration', handlers.update),
+      authorizer: adminAuthorizer,
+    });
+
+    // PATCH /v1/psicologos/{id} — verify profile status (admin only)
+    this.httpApi.addRoutes({
+      path: '/v1/psicologos/{id}',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: new HttpLambdaIntegration('VerifyIntegration', handlers.verify),
       authorizer: adminAuthorizer,
     });
   }

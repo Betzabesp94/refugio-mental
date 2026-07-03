@@ -14,7 +14,7 @@ Refugio Mental conecta psicólogos voluntarios con personas afectadas emocionalm
 git clone https://github.com/tu-usuario/refugio-mental.git
 cd refugio-mental
 npm install
-cp .example.env .env.local   # agrega tu NEXT_PUBLIC_API_URL
+cp .example.env .env.local   # agrega NEXT_PUBLIC_API_URL y las vars de Cognito
 npm run dev
 ```
 
@@ -99,11 +99,11 @@ refugio-mental/
 
 ## Mejoras futuras
 
-- [ ] Moderación de perfiles antes de publicación
-- [ ] Verificación de credenciales profesionales
-- [ ] Autenticación con Cognito para panel de psicólogos
+- [x] Moderación de perfiles antes de publicación (`estadoVerificacion`: PENDING → APPROVED / REJECTED)
+- [x] Verificación de credenciales profesionales (`credencialUrl`)
+- [x] Autenticación con Cognito para panel administrativo
+- [x] Panel administrativo (`/admin`) con aprobación/rechazo de perfiles
 - [ ] Subida de fotografías a S3
-- [ ] Panel administrativo
 - [ ] Búsqueda geográfica
 - [ ] Rate limiting en API Gateway
 - [ ] Internacionalización (i18n)

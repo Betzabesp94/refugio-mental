@@ -21,6 +21,8 @@ export interface Psicologo {
   redesSociales?: RedSocial[];
   aceptaDirectorio: boolean;
   creadoEn: string;
+  estadoVerificacion?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  credencialUrl: string;
 }
 
 export interface FiltrosDirectorio {
@@ -31,7 +33,7 @@ export interface FiltrosDirectorio {
   pais?: string;
 }
 
-export interface ListResponse {
+export interface ListPsicologosResponse {
   items: Psicologo[];
   count: number;
 }

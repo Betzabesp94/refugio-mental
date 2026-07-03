@@ -26,6 +26,10 @@ export interface Psicologo {
   redesSociales?: RedSocial[];
   aceptaDirectorio: boolean;
   creadoEn: string;
+  /** true = dato ficticio de ejemplo incluido en seed */
+  esSeed?: boolean;
+  estadoVerificacion?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  credencialUrl: string;
 }
 
 export interface FiltrosDirectorio {

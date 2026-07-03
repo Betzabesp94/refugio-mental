@@ -52,7 +52,13 @@ export function DirectoryGrid() {
     setFiltros((prev) => ({ ...prev, ...parcial }));
   };
 
-  const perfilesFiltrados = useFiltrarPerfiles(perfiles, filtros);
+  // El backend ya filtra por APPROVED; este filtro es defensa en profundidad
+  // por si el caché local contiene datos desactualizados.
+  const perfilesAprobados = perfiles.filter(
+    (p) => p.estadoVerificacion === 'APPROVED'
+  );
+
+  const perfilesFiltrados = useFiltrarPerfiles(perfilesAprobados, filtros);
 
   if (error) {
     return (
@@ -81,7 +87,7 @@ export function DirectoryGrid() {
         <FilterPanel
           filtros={filtros}
           onChange={actualizarFiltros}
-          perfiles={perfiles}
+          perfiles={perfilesAprobados} 
         />
       </div>
 
