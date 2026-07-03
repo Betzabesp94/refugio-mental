@@ -66,7 +66,6 @@ export async function guardarPerfil(
   datos: Omit<Psicologo, 'id' | 'creadoEn'>
 ): Promise<Psicologo> {
   const base = getBaseUrl();
-  console.log(datos)
   const res = await fetch(`${base}/v1/psicologos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
