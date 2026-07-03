@@ -33,7 +33,7 @@ export interface FiltrosDirectorio {
   idioma: string;
   modalidad: string;
   pais: string;
-  estadoVerificacion: "PENDING" | "APPROVED" | "REJECTED";
+  estadoVerificacion?: "PENDING" | "APPROVED" | "REJECTED";
 }
 
 export interface ListPsicologosResponse {
