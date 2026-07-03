@@ -18,8 +18,8 @@ export function validatePsicologo(data: Partial<PsicologoInput>): ValidationResu
 
   if (!data.credencialUrl?.trim()) {
     fields.credencialUrl = 'El enlace a tu credencial es obligatorio.';
-  } else if (!data.credencialUrl.startsWith('http')) {
-    fields.credencialUrl = 'El enlace de la credencial debe ser una URL válida.';
+  } else if (!data.credencialUrl.startsWith('https://')) {
+    fields.credencialUrl = 'El enlace debe comenzar con https://.';
   }
 
   if (!data.ciudad?.trim()) fields.ciudad = 'La ciudad es obligatoria.';
