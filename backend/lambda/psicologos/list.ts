@@ -49,7 +49,16 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
     items.sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
 
-    const response: ListPsicologosResponse = { items, count: items.length };
+    const itemsFiltrados = items.map((p) => {
+      const { credencialUrl, email, ...resto } = p;
+      return resto; 
+    });
+
+    const response: ListPsicologosResponse = { 
+      items: itemsFiltrados, 
+      count: itemsFiltrados.length 
+    };
+    
     return ok(response);
   } catch (err) {
     console.error('Error listing psicologos', err);

@@ -9,12 +9,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import type { FiltrosDirectorio, Psicologo } from "@/types";
+import type { FiltrosDirectorio, PsicologoPublico } from "@/types";
 
 interface FilterPanelProps {
   filtros: FiltrosDirectorio;
   onChange: (filtros: Partial<FiltrosDirectorio>) => void;
-  perfiles: Psicologo[];
+  perfiles: PsicologoPublico[];
 }
 
 const VALOR_TODOS = "__todos__";
